@@ -14,6 +14,7 @@ public class BusinessException extends RuntimeException {
     private CodeMsg codeMsg;
 
     public BusinessException(CodeMsg codeMsg){
+        super(codeMsg.getMsg());
         this.codeMsg = codeMsg;
     }
 }
