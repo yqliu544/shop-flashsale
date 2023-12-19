@@ -2,12 +2,16 @@ package cn.wolfcode.web.config;
 
 import cn.wolfcode.common.web.interceptor.FeignRequestInterceptor;
 import cn.wolfcode.common.web.interceptor.RequireLoginInterceptor;
+import cn.wolfcode.common.web.resolver.UserInfoMethodArgmentResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 
 @Configuration
@@ -26,5 +30,15 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requireLoginInterceptor)
                 .addPathPatterns("/**");
+    }
+
+    @Bean
+    public UserInfoMethodArgmentResolver userInfoMethodArgmentResolver(){
+        return new UserInfoMethodArgmentResolver();
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(userInfoMethodArgmentResolver());
     }
 }

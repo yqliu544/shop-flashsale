@@ -38,4 +38,5 @@ public class OrderInfo implements Serializable {
     private Integer seckillTime;// 秒杀场次
     private Long seckillId;//秒杀商品ID
 
+
 }

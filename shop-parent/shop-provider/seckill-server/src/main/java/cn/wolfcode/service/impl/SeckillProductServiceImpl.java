@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,7 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
     }
 
     @Override
-    @Cacheable(key = "'selectByIdAndTime:' + #time + ':' + #seckillId")
+    @Cacheable(key = "'selectByIdAndTime:' + #seckillId")
     public SeckillProductVo selectByIdAndTime(Long seckillId, Integer time) {
         SeckillProduct seckillProduct = seckillProductMapper.selectByIdAndTime(seckillId, time);
 
@@ -114,6 +115,7 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
         return vo;
     }
 
+    @CacheEvict(key = "'selectByIdAndTime:' + #seckillId")
     @Override
     public void decrStockCount(Long id) {
         seckillProductMapper.decrStock(id);

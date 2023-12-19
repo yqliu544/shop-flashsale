@@ -37,19 +37,20 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         return orderInfoMapper.selectByUserIdAndSeckillId(userId, seckillId, time);
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public String doSeckill(UserInfo userInfo, SeckillProductVo vo) {
-        // 1. 扣除秒杀商品库存
-        seckillProductService.decrStockCount(vo.getId());
-        // 2. 创建秒杀订单并保存
-        OrderInfo orderInfo = this.buildOrderInfo(userInfo, vo);
+    public String doSeckill(SeckillProductVo sp, Long phone) {
+        //扣除库存
+        seckillProductService.decrStockCount(sp.getId());
+        //创建订单信息对象
+        OrderInfo orderInfo = buildOrderInfo(phone, sp);
+        //保存订单
         orderInfoMapper.insert(orderInfo);
-        // 3. 返回订单编号
+
         return orderInfo.getOrderNo();
     }
 
-    private OrderInfo buildOrderInfo(UserInfo userInfo, SeckillProductVo vo) {
+
+    private OrderInfo buildOrderInfo(Long userId, SeckillProductVo vo) {
         Date now = new Date();
         OrderInfo orderInfo = new OrderInfo();
         orderInfo.setCreateDate(now);
@@ -67,7 +68,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         orderInfo.setSeckillPrice(vo.getSeckillPrice());
         orderInfo.setSeckillTime(vo.getTime());
         orderInfo.setStatus(OrderInfo.STATUS_ARREARAGE);
-        orderInfo.setUserId(userInfo.getPhone());
+        orderInfo.setUserId(userId);
         return orderInfo;
     }
 }
