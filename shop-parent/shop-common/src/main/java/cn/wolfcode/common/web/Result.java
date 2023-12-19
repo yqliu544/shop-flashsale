@@ -33,11 +33,9 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success(T data){
         return new Result<>(SUCCESS_CODE, SUCCESS_MESSAGE,data);
     }
-
     public static <T> Result<T> success(){
-        return new Result<T>(SUCCESS_CODE, SUCCESS_MESSAGE,null);
+        return success(null);
     }
-
     public static <T> Result<T> success(String msg, T data){
         return new Result<>(SUCCESS_CODE, msg, data);
     }
