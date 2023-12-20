@@ -36,7 +36,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     public OrderInfo selectByUserIdAndSeckillId(Long userId, Long seckillId, Integer time) {
         return orderInfoMapper.selectByUserIdAndSeckillId(userId, seckillId, time);
     }
-
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String doSeckill(SeckillProductVo sp, Long phone) {
         //扣除库存

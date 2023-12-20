@@ -41,11 +41,11 @@ public class RequireLoginInterceptor implements HandlerInterceptor {
                     response.getWriter().write(JSON.toJSONString(Result.error(CommonCodeMsg.TOKEN_INVALID)));
                     return false;
                 }
-                String ip = request.getHeader(CommonConstants.REAL_IP);
-                if (!userInfo.getLoginIp().equals(ip)) {
-                    response.getWriter().write(JSON.toJSONString(Result.error(CommonCodeMsg.LOGIN_IP_CHANGE)));
-                    return false;
-                }
+//                String ip = request.getHeader(CommonConstants.REAL_IP);
+//                if (!userInfo.getLoginIp().equals(ip)) {
+//                    response.getWriter().write(JSON.toJSONString(Result.error(CommonCodeMsg.LOGIN_IP_CHANGE)));
+//                    return false;
+//                }
             }
         }
         return true;

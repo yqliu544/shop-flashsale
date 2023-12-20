@@ -1,7 +1,10 @@
 package cn.wolfcode.service;
 
 
+import cn.wolfcode.domain.UserLogin;
 import cn.wolfcode.domain.UserResponse;
+
+import java.util.List;
 
 /**
  * Created by wolfcode
@@ -15,4 +18,6 @@ public interface IUserService {
      * @return
      */
     UserResponse login(Long phone, String password, String ip, String token);
+
+    List<UserLogin> selectUserLoginList(Integer num);
 }

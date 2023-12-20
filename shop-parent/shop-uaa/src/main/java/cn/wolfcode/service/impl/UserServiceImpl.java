@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -85,6 +86,12 @@ public class UserServiceImpl implements IUserService {
         }
 
         return new UserResponse(token, userInfo);
+    }
+
+    @Override
+    public List<UserLogin> selectUserLoginList(Integer num) {
+
+        return null;
     }
 
     private String createToken(UserInfo userInfo) {
