@@ -10,14 +10,17 @@ import cn.wolfcode.feign.ProductFeignApi;
 import cn.wolfcode.mapper.SeckillProductMapper;
 import cn.wolfcode.redis.SeckillRedisKey;
 import cn.wolfcode.service.ISeckillProductService;
+import cn.wolfcode.util.AssertUtils;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -36,6 +39,9 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
     private ProductFeignApi productFeignApi;
 //    @Autowired
 //    private RocketMQTemplate rocketMQTemplate;
+
+    @Autowired
+    private RedisScript<Integer> redisScript;
 
     @Override
     public List<SeckillProductVo> selectTodayListByTime(Integer time) {
@@ -117,7 +123,26 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
 
     @CacheEvict(key = "'selectByIdAndTime:' + #seckillId")
     @Override
-    public void decrStockCount(Long id) {
-        seckillProductMapper.decrStock(id);
+    public void decrStockCount(Long id, Integer time) {
+        String key="seckill:product:stockcount:" + time + ":" + id;
+        try {
+            Boolean b;
+            Integer ret;
+            do{
+//                 b = redisTemplate.opsForValue().setIfAbsent(key, "1");
+                ret = redisTemplate.execute(redisScript, Collections.singletonList(key), 1, 10);
+                if (ret>=1){
+                    break;
+                }
+            }while (true);
+
+            Long stockCount=seckillProductMapper.selectStockCountById(id);
+            AssertUtils.isTrue(stockCount>0,"库存不足");
+            seckillProductMapper.decrStock(id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            redisTemplate.delete(key);
+        }
     }
 }

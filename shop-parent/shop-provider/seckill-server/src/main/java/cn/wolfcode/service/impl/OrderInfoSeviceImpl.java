@@ -40,7 +40,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     @Override
     public String doSeckill(SeckillProductVo sp, Long phone) {
         //扣除库存
-        seckillProductService.decrStockCount(sp.getId());
+        seckillProductService.decrStockCount(sp.getId(),sp.getTime());
         //创建订单信息对象
         OrderInfo orderInfo = buildOrderInfo(phone, sp);
         //保存订单

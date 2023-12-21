@@ -29,4 +29,8 @@
         where id = #{seckillId}
           and time = #{time}
     </select>
+    <select id="selectStockCountById" resultType="java.lang.Long">
+        select stock_count from t_seckill_product
+            where id = #{seckillId}
+    </select>
 </mapper>
