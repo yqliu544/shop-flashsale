@@ -10,4 +10,7 @@
   <select id="selectUserInfoByPhone" resultType="cn.wolfcode.common.domain.UserInfo" >
     select * from t_user_info where phone = #{phone}
   </select>
+    <select id="selectUserLoginList" resultType="cn.wolfcode.domain.UserLogin">
+      select * from t_user_login where phone = #{phone}
+    </select>
 </mapper>

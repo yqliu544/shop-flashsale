@@ -4,6 +4,8 @@ import cn.wolfcode.common.domain.UserInfo;
 import cn.wolfcode.domain.LoginLog;
 import cn.wolfcode.domain.UserLogin;
 
+import java.util.List;
+
 /**
  * Created by wolfcode
  */
@@ -28,4 +30,7 @@ public interface UserMapper {
      * @return
      */
     int insertLoginLong(LoginLog loginLog);
+
+    List<UserLogin> selectUserLoginList();
+
 }

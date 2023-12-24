@@ -6,7 +6,6 @@ import cn.wolfcode.domain.UserLogin;
 import cn.wolfcode.domain.UserResponse;
 import cn.wolfcode.service.IUserService;
 import cn.wolfcode.util.MD5Util;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,7 +25,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/token")
 public class TokenController {
-    @Autowired
     private final IUserService userService;
 
     public TokenController(IUserService userService) {
@@ -36,8 +34,7 @@ public class TokenController {
     @RequestMapping("/initData")
     @Transactional
     public Result<String> initData(@RequestParam(required = false, defaultValue = "500") Integer num) throws Exception {
-        List<UserLogin> userLogins = initUserLogin(num);//在内存中创建500个User对象
-        createToken(userLogins);
+        initUserLogin(num);//在内存中创建500个User对象
         return Result.success("插入数据成功");
     }
 
@@ -49,7 +46,7 @@ public class TokenController {
         return Result.success("模拟登陆成功");
     }
 
-    private List<UserLogin> initUserLogin(int count) throws Exception {
+    private void initUserLogin(int count) throws Exception {
         List<UserLogin> userLoginList = new ArrayList<>();
         List<UserInfo> userInfoList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -70,7 +67,6 @@ public class TokenController {
         }
         insertUserLoginToDb(userLoginList);
         insertUserInfoToDb(userInfoList);
-        return userLoginList;
     }
 
     private void insertUserLoginToDb(List<UserLogin> userLoginList) throws Exception {

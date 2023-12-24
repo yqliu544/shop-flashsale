@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -90,8 +91,16 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public List<UserLogin> selectUserLoginList(Integer num) {
+        List<UserLogin> userLoginList = new ArrayList<>();
+        for (int i = 0; i < num; i++) {
+            UserLogin userLogin = new UserLogin();
+            userLogin.setPhone(13000000000L + i);
+            userLogin.setSalt("1a2b3c4d5e");
+            userLogin.setPassword(MD5Util.encode("123456", userLogin.getSalt()));
+            userLoginList.add(userLogin);
 
-        return null;
+        }
+        return userLoginList;
     }
 
     private String createToken(UserInfo userInfo) {
