@@ -11,6 +11,7 @@ import cn.wolfcode.mapper.SeckillProductMapper;
 import cn.wolfcode.redis.SeckillRedisKey;
 import cn.wolfcode.service.ISeckillProductService;
 import cn.wolfcode.util.AssertUtils;
+import cn.wolfcode.util.IdGenerateUtil;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.units.qual.A;
@@ -25,6 +26,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,6 +46,8 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
 
     @Autowired
     private RedisScript<Boolean> redisScript;
+    @Autowired
+    private ScheduledExecutorService scheduledExecutorService;
 
     @Override
     public List<SeckillProductVo> selectTodayListByTime(Integer time) {
@@ -125,24 +131,51 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
     @Override
     public void decrStockCount(Long id, Integer time) {
         String key="seckill:product:stockcount:" + time + ":" + id;
+        String threadId="";
+        Integer timeout=10;
+        ScheduledFuture<?> future=null;
         try {
             Boolean b;
             Boolean ret=false;
             do{
-//                 b = redisTemplate.opsForValue().setIfAbsent(key, "1");
-                ret = redisTemplate.execute(redisScript, Collections.singletonList(key), "1", "10");
+                threadId = IdGenerateUtil.get().nextId()+"";
+                //                 b = redisTemplate.opsForValue().setIfAbsent(key, "1");
+                ret = redisTemplate.execute(redisScript, Collections.singletonList(key), threadId, timeout+"");
                 if (ret!=null && ret){
                     break;
                 }
             }while (true);
-
+            long delayTime= (long) (timeout*0.8);
+            //创建watchdog监听业务是否完成
+            String finalThreadId = threadId;
+            future = scheduledExecutorService.scheduleAtFixedRate(() -> {
+                //查询redis中key是否存在，存在续期
+                String value = redisTemplate.opsForValue().get(key);
+                if (finalThreadId.equals(value)) {
+                    //续期
+                    redisTemplate.expire(key, delayTime + 2, TimeUnit.SECONDS);
+                    return;
+                }
+            }, delayTime, delayTime, TimeUnit.SECONDS);
             Long stockCount=seckillProductMapper.selectStockCountById(id);
             AssertUtils.isTrue(stockCount>0,"库存不足");
             seckillProductMapper.decrStock(id);
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
-            redisTemplate.delete(key);
+            String value = redisTemplate.opsForValue().get(key);
+            if (threadId.equals(value)){
+                redisTemplate.delete(key);
+            }
+            if (future!=null){
+                future.cancel(true);
+            }
         }
+    }
+    @CacheEvict(key = "'selectByIdAndTime:' + #id")
+    @Override
+    public void decrStockCount(Long id) {
+        int row = seckillProductMapper.decrStock(id);
+        AssertUtils.isTrue(row>0,"库存不足");
     }
 }

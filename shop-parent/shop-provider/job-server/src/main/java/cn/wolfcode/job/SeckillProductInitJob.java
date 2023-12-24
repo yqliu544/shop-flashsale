@@ -68,6 +68,9 @@ public class SeckillProductInitJob implements SimpleJob {
         for (SeckillProductVo vo : productVoList) {
             String json = JSON.toJSONString(vo);
             stringRedisTemplate.opsForList().rightPush(key, json);
+            //库存预热
+            String hashKey = SeckillRedisKey.SECKILL_STOCK_COUNT_HASH.join(time + "");
+            stringRedisTemplate.opsForHash().put(hashKey,vo.getId()+"",vo.getStockCount()+"");
         }
         log.info("[秒杀商品数据预热] 数据预热完成...");
     }

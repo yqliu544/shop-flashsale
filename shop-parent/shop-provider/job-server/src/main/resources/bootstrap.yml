@@ -9,6 +9,7 @@ spring:
         shared-configs:
           - data-id: redis-config-dev.yaml
           - data-id: nacos-discovery-config-dev.yaml
+        namespace: shop-flashsale
   profiles:
     active: dev # 环境标识
 

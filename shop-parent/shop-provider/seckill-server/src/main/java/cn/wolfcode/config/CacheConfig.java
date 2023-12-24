@@ -1,4 +1,4 @@
-package cn.wolfcode.cache;
+package cn.wolfcode.config;
 
 import com.alibaba.fastjson.support.spring.GenericFastJsonRedisSerializer;
 import lombok.extern.slf4j.Slf4j;
