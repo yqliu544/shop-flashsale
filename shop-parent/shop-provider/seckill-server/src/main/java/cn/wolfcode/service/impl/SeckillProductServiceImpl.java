@@ -41,7 +41,7 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
 //    private RocketMQTemplate rocketMQTemplate;
 
     @Autowired
-    private RedisScript<Integer> redisScript;
+    private RedisScript<Boolean> redisScript;
 
     @Override
     public List<SeckillProductVo> selectTodayListByTime(Integer time) {
@@ -127,11 +127,11 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
         String key="seckill:product:stockcount:" + time + ":" + id;
         try {
             Boolean b;
-            Integer ret;
+            Boolean ret=false;
             do{
 //                 b = redisTemplate.opsForValue().setIfAbsent(key, "1");
-                ret = redisTemplate.execute(redisScript, Collections.singletonList(key), 1, 10);
-                if (ret>=1){
+                ret = redisTemplate.execute(redisScript, Collections.singletonList(key), "1", "10");
+                if (ret!=null && ret){
                     break;
                 }
             }while (true);

@@ -42,9 +42,9 @@ public class CacheConfig {
     }
 
     @Bean
-    public RedisScript<Integer> redisScript(){
-        DefaultRedisScript<Integer> script = new DefaultRedisScript<>();
-        script.setResultType(Integer.class);
+    public RedisScript<Boolean> redisScript(){
+        DefaultRedisScript<Boolean> script = new DefaultRedisScript<>();
+        script.setResultType(Boolean.class);
         script.setLocation(new ClassPathResource("META-INF/scripts/redis_lua.lua"));
         return script;
 
