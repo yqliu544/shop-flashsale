@@ -49,6 +49,12 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         return orderInfo.getOrderNo();
     }
 
+    @Override
+    public String doSeckill(Long seckillId, Long phone,Integer time) {
+        SeckillProductVo seckillProductVo = seckillProductService.selectByIdAndTime(seckillId, time);
+        return this.doSeckill(seckillProductVo,phone);
+    }
+
 
     private OrderInfo buildOrderInfo(Long userId, SeckillProductVo vo) {
         Date now = new Date();

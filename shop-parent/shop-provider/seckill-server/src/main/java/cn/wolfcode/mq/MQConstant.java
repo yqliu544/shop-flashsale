@@ -4,6 +4,8 @@ package cn.wolfcode.mq;
 public class MQConstant {
     //订单队列
     public static final String ORDER_PEDDING_TOPIC = "ORDER_PEDDING_TOPIC";
+    //
+    public static final String ORDER_PEDDING_CONSUMER_GROUP = "ORDER_PEDDING_CONSUMER_GROUP";
     //订单结果
     public static final String ORDER_RESULT_TOPIC = "ORDER_RESULT_TOPIC";
     //订单超时取消
