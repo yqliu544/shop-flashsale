@@ -16,4 +16,6 @@ public interface IOrderInfoService {
 
     String doSeckill(SeckillProductVo seckillProductVo, Long phone);
     String doSeckill(Long seckillId, Long phone,Integer time);
+
+    OrderInfo selectByOrderNo(String orderNo);
 }

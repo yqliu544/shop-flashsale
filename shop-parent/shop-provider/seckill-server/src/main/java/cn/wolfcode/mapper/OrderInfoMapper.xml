@@ -12,6 +12,11 @@
         from t_order_info
         where user_id = #{userId} and seckill_id = #{seckillId} and seckill_time = #{time}
     </select>
+    <select id="selectById" resultType="cn.wolfcode.domain.OrderInfo">
+        select *
+        from t_order_info
+        where order_no=#{orderNo}
+    </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into t_order_info (order_no, user_id, product_id, product_img, delivery_addr_id, product_name,

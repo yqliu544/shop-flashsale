@@ -23,10 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -52,7 +49,7 @@ public class OrderInfoController {
 
     @RequireLogin
     @PostMapping("/doSeckill")
-    public Result<?> doSeckill(Long seckillId, Integer time, @RequestUser UserInfo userInfo) {
+    public Result<?> doSeckill(Long seckillId, Integer time, @RequestUser UserInfo userInfo,@RequestHeader("token") String token) {
         //判断库存是否已经卖完
         if (STOCK_OVER_FLOW_MAP.get(seckillId) != null && STOCK_OVER_FLOW_MAP.get(seckillId)) {
             return Result.error(SeckillCodeMsg.SECKILL_STOCK_OVER);
@@ -85,7 +82,7 @@ public class OrderInfoController {
 
             //创建订单，扣除库存，返回订单id
 //            String orderId = orderInfoService.doSeckill(seckillProductVo, userInfo.getPhone());
-            rocketMQTemplate.asyncSend(MQConstant.ORDER_PEDDING_TOPIC,new OrderMessage(time,seckillId,null,userInfo.getPhone()),new DefaultSendCallback("创建订单"));
+            rocketMQTemplate.asyncSend(MQConstant.ORDER_PEDDING_TOPIC,new OrderMessage(time,seckillId,token,userInfo.getPhone()),new DefaultSendCallback("创建订单"));
             return Result.success("订单创建中。。。。。。");
         } catch (BusinessException e) {
             STOCK_OVER_FLOW_MAP.put(seckillId, true);
@@ -109,5 +106,10 @@ public class OrderInfoController {
 
     private UserInfo getUserByToken(String token) {
         return JSON.parseObject(redisTemplate.opsForValue().get(CommonRedisKey.USER_TOKEN.getRealKey(token)), UserInfo.class);
+    }
+
+    @GetMapping("/find")
+    public Result<OrderInfo> findById(String orderNo){
+        return Result.success(orderInfoService.selectByOrderNo(orderNo));
     }
 }
