@@ -10,8 +10,10 @@ public class MQConstant {
     public static final String ORDER_RESULT_TOPIC = "ORDER_RESULT_TOPIC";
     //订单超时取消
     public static final String ORDER_PAY_TIMEOUT_TOPIC = "ORDER_PAY_TIMEOUT_TOPIC";
+    public static final String ORDER_PAY_TIMEOUT_CONSUMER_GROUP = "ORDER_PAY_TIMEOUT_CONSUMER_GROUP";
     //取消本地标识
     public static final String CANCEL_SECKILL_OVER_SIGE_TOPIC = "CANCEL_SECKILL_OVER_SIGE_TOPIC";
+    public static final String CANCEL_SECKILL_OVER_SIGE_CONSUMER_GROUP = "CANCEL_SECKILL_OVER_SIGE_CONSUMER_GROUP";
     //订单创建成功Tag
     public static final String ORDER_RESULT_SUCCESS_TAG = "SUCCESS";
     //订单创建成失败Tag

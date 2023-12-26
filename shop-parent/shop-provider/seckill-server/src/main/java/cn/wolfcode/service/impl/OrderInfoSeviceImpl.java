@@ -6,9 +6,15 @@ import cn.wolfcode.domain.SeckillProductVo;
 import cn.wolfcode.mapper.OrderInfoMapper;
 import cn.wolfcode.mapper.PayLogMapper;
 import cn.wolfcode.mapper.RefundLogMapper;
+import cn.wolfcode.mq.DefaultSendCallback;
+import cn.wolfcode.mq.MQConstant;
+import cn.wolfcode.mq.OrderMessage;
+import cn.wolfcode.redis.SeckillRedisKey;
 import cn.wolfcode.service.IOrderInfoService;
 import cn.wolfcode.service.ISeckillProductService;
 import cn.wolfcode.util.IdGenerateUtil;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,6 +37,8 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     private PayLogMapper payLogMapper;
     @Autowired
     private RefundLogMapper refundLogMapper;
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     @Override
     public OrderInfo selectByUserIdAndSeckillId(Long userId, Long seckillId, Integer time) {
@@ -48,7 +56,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
 
         return orderInfo.getOrderNo();
     }
-
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String doSeckill(Long seckillId, Long phone,Integer time) {
         SeckillProductVo seckillProductVo = seckillProductService.selectByIdAndTime(seckillId, time);
@@ -58,6 +66,31 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     @Override
     public OrderInfo selectByOrderNo(String orderNo) {
         return orderInfoMapper.selectById(orderNo);
+    }
+
+    @Override
+    public void failedRollback(OrderMessage orderMessage) {
+        //回补redis
+        Long seckillCount=seckillProductService.selectStockCountById(orderMessage.getSeckillId());
+        String key = SeckillRedisKey.SECKILL_STOCK_COUNT_HASH.join(orderMessage.getTime() + "");
+        redisTemplate.opsForHash().put(key,orderMessage.getSeckillId()+"",seckillCount+"");
+        //删除用户标识
+        String userOrderFalg = SeckillRedisKey.SECKILL_ORDER_HASH.join(orderMessage.getSeckillId() + "");
+        redisTemplate.opsForHash().delete(userOrderFalg,orderMessage.getUserPhone()+"");
+        //删除本地标识
+        rocketMQTemplate.asyncSend(MQConstant.CANCEL_SECKILL_OVER_SIGE_TOPIC,orderMessage.getSeckillId(),new DefaultSendCallback("下单失败回滚"));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void checkPayTimeout(OrderMessage message) {
+        int row = orderInfoMapper.changePayStatus(message.getOrderNo(), OrderInfo.STATUS_CANCEL, OrderInfo.PAY_TYPE_ONLINE);
+        if (row>0){
+            //mysql秒杀商品库存数量+1
+            seckillProductService.incrStockCount(message.getSeckillId());
+            //订单信息回滚（redis库存回滚，删除用户下单标识，删除本地标识）
+            this.failedRollback(message);
+        }
     }
 
 

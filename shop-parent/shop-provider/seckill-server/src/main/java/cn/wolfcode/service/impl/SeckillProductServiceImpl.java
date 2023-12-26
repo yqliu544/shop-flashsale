@@ -178,4 +178,14 @@ public class SeckillProductServiceImpl implements ISeckillProductService {
         int row = seckillProductMapper.decrStock(id);
         AssertUtils.isTrue(row>0,"库存不足");
     }
+
+    @Override
+    public Long selectStockCountById(Long seckillId) {
+        return seckillProductMapper.selectStockCountById(seckillId);
+    }
+
+    @Override
+    public void incrStockCount(Long seckillId) {
+        seckillProductMapper.incrStock(seckillId);
+    }
 }

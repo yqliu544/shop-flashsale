@@ -13,6 +13,8 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -34,10 +36,14 @@ public class OderPendingMessageListener implements RocketMQListener<OrderMessage
             result.setOrderNo(orderNo);
             result.setCode(Result.SUCCESS_CODE);
             result.setMsg("订单创建成功");
+            //当下单成功后，发送一个延迟消息，检查订单支付状态，超过时间未支付，直接取消改订单
+            orderMessage.setOrderNo(orderNo);
+            Message<OrderMessage> orderMessageMessage = MessageBuilder.withPayload(orderMessage).build();
+            rocketMQTemplate.asyncSend(MQConstant.ORDER_PAY_TIMEOUT_TOPIC,orderMessageMessage,new DefaultSendCallback("订单超时未支付"),2000,3);
         } catch (Exception e) {
             result.setCode(SeckillCodeMsg.SECKILL_ERROR.getCode());
             result.setMsg(SeckillCodeMsg.SECKILL_ERROR.getMsg());
-            e.printStackTrace();
+            orderInfoService.failedRollback(orderMessage);
         }
         rocketMQTemplate.asyncSend(MQConstant.ORDER_RESULT_TOPIC,result,new DefaultSendCallback("订单结果"));
 

@@ -47,6 +47,10 @@ public class OrderInfoController {
     @Autowired
     private IOrderInfoService orderInfoService;
 
+    public static void deleteKey(Long key){
+        STOCK_OVER_FLOW_MAP.remove(key);
+    }
+
     @RequireLogin
     @PostMapping("/doSeckill")
     public Result<?> doSeckill(Long seckillId, Integer time, @RequestUser UserInfo userInfo,@RequestHeader("token") String token) {
@@ -82,7 +86,7 @@ public class OrderInfoController {
 
             //创建订单，扣除库存，返回订单id
 //            String orderId = orderInfoService.doSeckill(seckillProductVo, userInfo.getPhone());
-            rocketMQTemplate.asyncSend(MQConstant.ORDER_PEDDING_TOPIC,new OrderMessage(time,seckillId,token,userInfo.getPhone()),new DefaultSendCallback("创建订单"));
+            rocketMQTemplate.asyncSend(MQConstant.ORDER_PEDDING_TOPIC,new OrderMessage(time,seckillId,token,userInfo.getPhone(),null),new DefaultSendCallback("创建订单"));
             return Result.success("订单创建中。。。。。。");
         } catch (BusinessException e) {
             STOCK_OVER_FLOW_MAP.put(seckillId, true);
