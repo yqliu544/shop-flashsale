@@ -107,9 +107,14 @@ public class OrderInfoController {
     private UserInfo getUserByToken(String token) {
         return JSON.parseObject(redisTemplate.opsForValue().get(CommonRedisKey.USER_TOKEN.getRealKey(token)), UserInfo.class);
     }
-
+    @RequireLogin
     @GetMapping("/find")
-    public Result<OrderInfo> findById(String orderNo){
-        return Result.success(orderInfoService.selectByOrderNo(orderNo));
+    public Result<OrderInfo> findById(String orderNo,@RequestUser UserInfo userInfo){
+        OrderInfo orderInfo = orderInfoService.selectByOrderNo(orderNo);
+        Long userId = orderInfo.getUserId();
+        if (!userInfo.getPhone().equals(userId)) {
+            return Result.error(SeckillCodeMsg.REMOTE_DATA_ERROR);
+        }
+        return Result.success(orderInfo);
     }
 }
