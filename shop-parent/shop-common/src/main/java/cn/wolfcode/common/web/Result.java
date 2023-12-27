@@ -1,5 +1,6 @@
 package cn.wolfcode.common.web;
 
+import cn.wolfcode.util.AssertUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -53,4 +54,8 @@ public class Result<T> implements Serializable {
         return this.code != SUCCESS_CODE;
     }
 
+    public T checkAndGet() {
+        AssertUtils.isTrue(!hasError(),this.msg);
+        return this.data;
+    }
 }

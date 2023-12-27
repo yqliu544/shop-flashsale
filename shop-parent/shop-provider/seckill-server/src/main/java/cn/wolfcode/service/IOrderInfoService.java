@@ -23,4 +23,6 @@ public interface IOrderInfoService {
     void failedRollback(OrderMessage orderMessage);
 
     void checkPayTimeout(OrderMessage message);
+
+    String onlinePay(String orderNo);
 }

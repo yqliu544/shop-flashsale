@@ -25,4 +25,9 @@ public class AlipayProperties {
     private String charset;
     // 支付宝网关
     private String gatewayUrl ;
+    //同步回调地址
+    private String returnUrl;
+    //异步回调地址
+    private String notifyUrl;
+
 }

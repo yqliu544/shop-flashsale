@@ -22,7 +22,7 @@ function initData () { // 初始化加载订单数据
 // 订单支付操作
 function startPayMent(orderNo) {
     ajaxHttp({
-        url: '/seckill/orderPay/alipay?orderNo='+orderNo+'&type='+priceType+''
+        url: '/seckill/orderPay/pay?orderNo='+orderNo+'&type='+priceType+''
     }, (res) => {
         if(priceType==0){
             $("#pay").append(res.data);
