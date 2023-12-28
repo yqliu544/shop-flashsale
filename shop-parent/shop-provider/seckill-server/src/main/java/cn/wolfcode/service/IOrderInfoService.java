@@ -3,6 +3,7 @@ package cn.wolfcode.service;
 
 import cn.wolfcode.common.domain.UserInfo;
 import cn.wolfcode.domain.OrderInfo;
+import cn.wolfcode.domain.PayResult;
 import cn.wolfcode.domain.SeckillProductVo;
 import cn.wolfcode.mq.OrderMessage;
 
@@ -25,4 +26,8 @@ public interface IOrderInfoService {
     void checkPayTimeout(OrderMessage message);
 
     String onlinePay(String orderNo);
+
+    void alipaySuccess(PayResult payResult);
+
+    void alipayfund(String orderNo);
 }

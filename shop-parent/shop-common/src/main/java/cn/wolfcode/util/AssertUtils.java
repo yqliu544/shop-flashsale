@@ -16,4 +16,10 @@ public class AssertUtils {
             throw new BusinessException(new CodeMsg(ASSERT_UTIL_EXCEPTION_CODE,msg));
         }
     }
+
+    public static void isError(boolean hasError, String msg) {
+        if (hasError){
+            throw new BusinessException(new CodeMsg(ASSERT_UTIL_EXCEPTION_CODE,msg));
+        }
+    }
 }

@@ -1,10 +1,9 @@
 package cn.wolfcode.service.impl;
 
 import cn.wolfcode.common.domain.UserInfo;
+import cn.wolfcode.common.exception.BusinessException;
 import cn.wolfcode.common.web.Result;
-import cn.wolfcode.domain.OrderInfo;
-import cn.wolfcode.domain.PayVo;
-import cn.wolfcode.domain.SeckillProductVo;
+import cn.wolfcode.domain.*;
 import cn.wolfcode.feign.PaymentFeignApi;
 import cn.wolfcode.mapper.OrderInfoMapper;
 import cn.wolfcode.mapper.PayLogMapper;
@@ -15,12 +14,15 @@ import cn.wolfcode.mq.OrderMessage;
 import cn.wolfcode.redis.SeckillRedisKey;
 import cn.wolfcode.service.IOrderInfoService;
 import cn.wolfcode.service.ISeckillProductService;
+import cn.wolfcode.util.AssertUtils;
 import cn.wolfcode.util.IdGenerateUtil;
+import cn.wolfcode.web.msg.SeckillCodeMsg;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -76,14 +78,19 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     @Override
     public void failedRollback(OrderMessage orderMessage) {
         //回补redis
-        Long seckillCount=seckillProductService.selectStockCountById(orderMessage.getSeckillId());
-        String key = SeckillRedisKey.SECKILL_STOCK_COUNT_HASH.join(orderMessage.getTime() + "");
-        redisTemplate.opsForHash().put(key,orderMessage.getSeckillId()+"",seckillCount+"");
+
+        this.rollbackRedisStock(orderMessage.getSeckillId(),orderMessage.getTime());
         //删除用户标识
         String userOrderFalg = SeckillRedisKey.SECKILL_ORDER_HASH.join(orderMessage.getSeckillId() + "");
         redisTemplate.opsForHash().delete(userOrderFalg,orderMessage.getUserPhone()+"");
         //删除本地标识
         rocketMQTemplate.asyncSend(MQConstant.CANCEL_SECKILL_OVER_SIGE_TOPIC,orderMessage.getSeckillId(),new DefaultSendCallback("下单失败回滚"));
+    }
+
+    private void rollbackRedisStock(Long seckillId,Integer time) {
+        Long seckillCount=seckillProductService.selectStockCountById(seckillId);
+        String key = SeckillRedisKey.SECKILL_STOCK_COUNT_HASH.join(time + "");
+        redisTemplate.opsForHash().put(key, seckillId+"",seckillCount+"");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -114,6 +121,56 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         //远程调用支付服务
         Result<String> result = paymentFeignApi.prepay(payVo);
         return result.checkAndGet();
+    }
+
+    @Override
+    public void alipaySuccess(PayResult payResult) {
+        OrderInfo orderInfo = this.selectByOrderNo(payResult.getOutTradeNo());
+        AssertUtils.notNull(orderInfo,"订单信息有误");
+        AssertUtils.isTrue(orderInfo.getSeckillPrice().toString().equals(payResult.getTotalAmount()),"支付金额有误");
+        int row = orderInfoMapper.changePayStatus(orderInfo.getOrderNo(), OrderInfo.STATUS_ACCOUNT_PAID, OrderInfo.PAY_TYPE_ONLINE);
+        AssertUtils.isTrue(row>0,"订单状态修改失败");
+        PayLog payLog = new PayLog();
+        payLog.setPayType(PayLog.PAY_TYPE_ONLINE);
+        payLog.setTotalAmount(payResult.getTotalAmount());
+        payLog.setOutTradeNo(payResult.getOutTradeNo());
+        payLog.setTradeNo(payResult.getTradeNo());
+        payLog.setNotifyTime(System.currentTimeMillis()+"");
+        payLogMapper.insert(payLog);
+    }
+    @Transactional(rollbackFor=Exception.class)
+    @Override
+    public void alipayfund(String orderNo) {
+        OrderInfo orderInfo = this.selectByOrderNo(orderNo);
+        //判断订单是否为已支付
+        AssertUtils.isTrue(OrderInfo.STATUS_ACCOUNT_PAID.equals(orderInfo.getStatus()),"订单状态错误");
+        Result<Boolean> result=null;
+        RefundVo refundVo = new RefundVo(orderNo,orderInfo.getSeckillPrice(),"不想要了");
+        if (orderInfo.getPayType()==OrderInfo.PAY_TYPE_ONLINE){
+            //支付退款
+            result=paymentFeignApi.refund(refundVo);
+        }else {
+            //积分退款
+
+        }
+        if (result==null||result.hasError()||!result.getData()){
+            throw new BusinessException(SeckillCodeMsg.REFUND_ERROR);
+        }
+
+        //更新订单状态已退款
+        int row = orderInfoMapper.changeRefundStatus(orderNo, OrderInfo.STATUS_REFUND);
+        AssertUtils.isTrue(row>0,"退款失败，更新状态异常");
+        //库存回补
+        seckillProductService.incrStockCount(orderInfo.getSeckillId());
+        this.rollbackRedisStock(orderInfo.getSeckillId(),orderInfo.getSeckillTime());
+        rocketMQTemplate.asyncSend(MQConstant.CANCEL_SECKILL_OVER_SIGE_TOPIC,orderInfo.getSeckillId(),new DefaultSendCallback("取消本地标识"));
+        RefundLog refundLog = new RefundLog();
+        refundLog.setRefundReason("用户申请退款："+orderInfo.getProductName());
+        refundLog.setRefundTime(new Date());
+        refundLog.setRefundType(orderInfo.getPayType());
+        refundLog.setRefundAmount(orderInfo.getSeckillPrice().toString());
+        refundLog.setOutTradeNo(orderNo);
+        refundLogMapper.insert(refundLog);
     }
 
 

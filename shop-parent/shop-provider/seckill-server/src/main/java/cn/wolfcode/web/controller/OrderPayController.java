@@ -3,12 +3,11 @@ package cn.wolfcode.web.controller;
 
 import cn.wolfcode.common.web.Result;
 import cn.wolfcode.domain.OrderInfo;
+import cn.wolfcode.domain.PayResult;
 import cn.wolfcode.service.IOrderInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -30,5 +29,18 @@ public class OrderPayController {
             return null;
         }
 
+    }
+
+    @PostMapping("/success")
+    public Result<?> alipaySuccess(@RequestBody PayResult payResult){
+        orderInfoService.alipaySuccess(payResult);
+        return Result.success();
+    }
+
+    @GetMapping("/refund")
+    public Result<String> refund(String orderNo){
+        orderInfoService.alipayfund(orderNo);
+
+        return Result.success();
     }
 }
