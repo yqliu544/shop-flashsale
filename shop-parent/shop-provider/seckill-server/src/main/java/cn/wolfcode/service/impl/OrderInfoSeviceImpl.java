@@ -4,6 +4,7 @@ import cn.wolfcode.common.domain.UserInfo;
 import cn.wolfcode.common.exception.BusinessException;
 import cn.wolfcode.common.web.Result;
 import cn.wolfcode.domain.*;
+import cn.wolfcode.feign.IntegralFeignApi;
 import cn.wolfcode.feign.PaymentFeignApi;
 import cn.wolfcode.mapper.OrderInfoMapper;
 import cn.wolfcode.mapper.PayLogMapper;
@@ -46,6 +47,8 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     private RocketMQTemplate rocketMQTemplate;
     @Autowired
     private PaymentFeignApi paymentFeignApi;
+    @Autowired
+    private IntegralFeignApi integralFeignApi;
 
     @Override
     public OrderInfo selectByUserIdAndSeckillId(Long userId, Long seckillId, Integer time) {
@@ -171,6 +174,33 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         refundLog.setRefundAmount(orderInfo.getSeckillPrice().toString());
         refundLog.setOutTradeNo(orderNo);
         refundLogMapper.insert(refundLog);
+    }
+
+    @Override
+    public void integralPay(String orderNo,Long phone) {
+        OrderInfo orderInfo = this.selectByOrderNo(orderNo);
+        AssertUtils.isTrue(OrderInfo.STATUS_ARREARAGE.equals(orderInfo.getStatus()),"订单状态错误");
+        //判断当前用户是否为这个订单的用户
+        OperateIntergralVo intergralVo = new OperateIntergralVo();
+        intergralVo.setInfo("积分秒杀："+orderInfo.getProductName());
+        intergralVo.setValue(orderInfo.getIntergral());
+        intergralVo.setUserId(phone);
+        intergralVo.setOutTradeNo(orderNo);
+        //远程调用支付服务发起支付
+        Result<String> result = integralFeignApi.prepay(intergralVo);
+        String tradeNo=result.checkAndGet();
+        //更新订单状态
+        int row = orderInfoMapper.changePayStatus(orderNo, OrderInfo.STATUS_ACCOUNT_PAID, OrderInfo.PAY_TYPE_INTERGRAL);
+        AssertUtils.isTrue(row>0,"订单状态修改失败");
+        PayLog payLog = new PayLog();
+        payLog.setPayType(PayLog.PAY_TYPE_INTERGRAL);
+        payLog.setTotalAmount(intergralVo.getValue()+"");
+        payLog.setOutTradeNo(orderNo);
+        payLog.setTradeNo(tradeNo);
+        payLog.setNotifyTime(System.currentTimeMillis()+"");
+        payLogMapper.insert(payLog);
+
+
     }
 
 

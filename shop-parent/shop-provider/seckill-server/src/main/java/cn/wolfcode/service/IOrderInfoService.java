@@ -30,4 +30,6 @@ public interface IOrderInfoService {
     void alipaySuccess(PayResult payResult);
 
     void refund(String orderNo);
+
+    void integralPay(String orderNo,Long phone);
 }

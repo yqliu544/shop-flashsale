@@ -1,7 +1,9 @@
 package cn.wolfcode.web.controller;
 
 
+import cn.wolfcode.common.domain.UserInfo;
 import cn.wolfcode.common.web.Result;
+import cn.wolfcode.common.web.resolver.RequestUser;
 import cn.wolfcode.domain.OrderInfo;
 import cn.wolfcode.domain.PayResult;
 import cn.wolfcode.service.IOrderInfoService;
@@ -22,11 +24,12 @@ public class OrderPayController {
     @Autowired
     private IOrderInfoService orderInfoService;
     @GetMapping("/pay")
-    public Result<String> dopay(String orderNo,Integer type){
+    public Result<String> dopay(String orderNo, Integer type, @RequestUser UserInfo userInfo){
         if (type== OrderInfo.PAY_TYPE_ONLINE){
             return Result.success(orderInfoService.onlinePay(orderNo));
         }else {
-            return null;
+            orderInfoService.integralPay(orderNo,userInfo.getPhone());
+            return Result.success();
         }
 
     }
