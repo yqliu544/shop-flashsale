@@ -39,7 +39,7 @@ public class OrderPayController {
 
     @GetMapping("/refund")
     public Result<String> refund(String orderNo){
-        orderInfoService.alipayfund(orderNo);
+        orderInfoService.refund(orderNo);
 
         return Result.success();
     }

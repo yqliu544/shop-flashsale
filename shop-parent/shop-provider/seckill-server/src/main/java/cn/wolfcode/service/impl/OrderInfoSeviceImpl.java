@@ -140,7 +140,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
     }
     @Transactional(rollbackFor=Exception.class)
     @Override
-    public void alipayfund(String orderNo) {
+    public void refund(String orderNo) {
         OrderInfo orderInfo = this.selectByOrderNo(orderNo);
         //判断订单是否为已支付
         AssertUtils.isTrue(OrderInfo.STATUS_ACCOUNT_PAID.equals(orderInfo.getStatus()),"订单状态错误");

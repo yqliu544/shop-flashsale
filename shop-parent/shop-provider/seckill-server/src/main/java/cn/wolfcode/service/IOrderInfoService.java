@@ -29,5 +29,5 @@ public interface IOrderInfoService {
 
     void alipaySuccess(PayResult payResult);
 
-    void alipayfund(String orderNo);
+    void refund(String orderNo);
 }

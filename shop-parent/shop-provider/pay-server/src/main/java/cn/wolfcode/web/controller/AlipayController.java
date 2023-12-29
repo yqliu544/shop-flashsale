@@ -1,5 +1,6 @@
 package cn.wolfcode.web.controller;
 
+import cn.wolfcode.common.web.CodeMsg;
 import cn.wolfcode.common.web.Result;
 import cn.wolfcode.config.AlipayProperties;
 import cn.wolfcode.domain.PayResult;
@@ -11,9 +12,13 @@ import cn.wolfcode.web.msg.PayCodeMsg;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
+import com.alipay.api.domain.AlipayTradeFastpayRefundQueryModel;
+import com.alipay.api.domain.AlipayTradeRefundModel;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.request.AlipayTradeFastpayRefundQueryRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -130,7 +135,34 @@ public class AlipayController {
 
     @PostMapping("/refund")
     public Result<Boolean> refund(@RequestBody RefundVo refundVo){
-        return null;
+        AlipayTradeRefundRequest alipay_request = new AlipayTradeRefundRequest();
+        AlipayTradeRefundModel model = new AlipayTradeRefundModel();
+        model.setOutTradeNo(refundVo.getOutTradeNo());
+        model.setRefundAmount(refundVo.getRefundAmount());
+        model.setRefundReason(refundVo.getRefundReason());
+        alipay_request.setBizModel(model);
+        try {
+            AlipayTradeRefundResponse response = alipayClient.execute(alipay_request);
+            AssertUtils.isTrue(response.isSuccess(),response.getSubMsg());
+            //判断是否支付成功
+            if ("Y".equalsIgnoreCase(response.getFundChange())){
+                return Result.success(true);
+            }
+            //如果fund——change=N 应该再调用查询接口判断是否支付成功
+            AlipayTradeFastpayRefundQueryRequest refundQueryRequest = new AlipayTradeFastpayRefundQueryRequest();
+            AlipayTradeFastpayRefundQueryModel refundQueryModel = new AlipayTradeFastpayRefundQueryModel();
+            refundQueryModel.setOutTradeNo(refundVo.getOutTradeNo());
+            refundQueryModel.setOutRequestNo(refundVo.getOutTradeNo());
+            refundQueryRequest.setBizModel(refundQueryModel);
+            AlipayTradeFastpayRefundQueryResponse refundQueryResponse = alipayClient.execute(refundQueryRequest);
+            if ("10000".equals(refundQueryResponse.getCode())&& "REFUND_SUCCESS".equalsIgnoreCase(refundQueryResponse.getRefundStatus())){
+                return Result.success(true);
+            }
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+            return Result.error(new CodeMsg(506001,e.getMessage()));
+        }
+        return Result.success(false);
     }
 
 }
