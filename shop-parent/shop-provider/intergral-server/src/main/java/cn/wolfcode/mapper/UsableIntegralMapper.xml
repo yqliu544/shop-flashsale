@@ -31,4 +31,10 @@
     gmt_modified = now()
     where user_id = #{userId}
   </update>
+    <update id="decrIntegral">
+      update t_usable_integral
+      set amount=amount-#{integral},
+          gmt_modified=now()
+      where user_id=#{userId} and amount>=#{integral}
+    </update>
 </mapper>

@@ -3,9 +3,13 @@
 <mapper namespace="cn.wolfcode.mapper.AccountLogMapper" >
   <insert id="insert">
     insert into t_account_log
-    (pk_value,type,amount,gmt_time,info)
+    (trade_no,out_trade_no,type,amount,gmt_time,info,user_id)
     values
-    (#{pkValue},#{type},#{amount},#{gmtTime},#{info})
+    (#{tradeNo},#{outTradeNo},#{type},#{amount},#{gmtTime},#{info},#{userId})
   </insert>
+  <select id="selectByOutTradeNoAndType" resultType="cn.wolfcode.domain.AccountLog">
+    select trade_no tradeNo,out_trade_no outTradeNo,type,amount,gmt_time gmtTime,info,,user_id userId from t_account_log
+    where out_trade_no=#{outTradeNo} and type=#{type}
+  </select>
 
 </mapper>

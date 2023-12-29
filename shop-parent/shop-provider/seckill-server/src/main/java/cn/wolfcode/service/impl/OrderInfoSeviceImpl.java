@@ -154,7 +154,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
             result=paymentFeignApi.refund(refundVo);
         }else {
             //积分退款
-
+            result=integralFeignApi.refund(refundVo);
         }
         if (result==null||result.hasError()||!result.getData()){
             throw new BusinessException(SeckillCodeMsg.REFUND_ERROR);
@@ -176,6 +176,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         refundLogMapper.insert(refundLog);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void integralPay(String orderNo,Long phone) {
         OrderInfo orderInfo = this.selectByOrderNo(orderNo);
