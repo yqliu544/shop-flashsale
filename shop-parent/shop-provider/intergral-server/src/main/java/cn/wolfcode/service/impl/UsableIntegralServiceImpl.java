@@ -55,7 +55,7 @@ public class UsableIntegralServiceImpl implements IUsableIntegralService {
         AccountLog decrLog = accountLogMapper.selectByOutTradeNoAndType(refundVo.getOutTradeNo(), AccountLog.TYPE_DECR);
         AssertUtils.notNull(decrLog, "退款失败");
         AssertUtils.isTrue(new BigDecimal(refundVo.getRefundAmount()).compareTo(new BigDecimal(decrLog.getAmount())) <= 0, "退款金额不能大于支付金额");
-        usableIntegralMapper.addIntergral(decrLog.getUserId(), Long.valueOf(refundVo.getRefundAmount()));
+        usableIntegralMapper.addIntergral(decrLog.getUserId(), new BigDecimal(refundVo.getRefundAmount()).longValue());
         AccountLog log = new AccountLog();
         log.setAmount(new BigDecimal(refundVo.getRefundAmount()).longValue());
         log.setInfo(refundVo.getRefundReason());
