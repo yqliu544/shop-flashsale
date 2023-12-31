@@ -9,7 +9,7 @@
   </insert>
     <select id="selectByOrderNo" resultType="cn.wolfcode.domain.RefundLog">
         select out_trade_no outTradeNo,refund_time refundTime,refund_reason refundReason,refund_amount refundAmount,refund_type refundType from t_refund_log
-        where order_no=#{orderNo}
+        where out_trade_no=#{orderNo}
     </select>
 
 </mapper>
