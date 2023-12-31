@@ -4,6 +4,7 @@ package cn.wolfcode.service;
 import cn.wolfcode.common.domain.UserInfo;
 import cn.wolfcode.domain.OrderInfo;
 import cn.wolfcode.domain.PayResult;
+import cn.wolfcode.domain.RefundLog;
 import cn.wolfcode.domain.SeckillProductVo;
 import cn.wolfcode.mq.OrderMessage;
 
@@ -32,4 +33,8 @@ public interface IOrderInfoService {
     void refund(String orderNo);
 
     void integralPay(String orderNo,Long phone);
+
+    void integralRefundRollback(String o);
+
+    RefundLog selectRefundLogByOrderNo(String orderNo);
 }

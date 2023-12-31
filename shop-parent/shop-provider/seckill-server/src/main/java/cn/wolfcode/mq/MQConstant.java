@@ -20,4 +20,8 @@ public class MQConstant {
     public static final String ORDER_RESULT_FAIL_TAG = "FAIL";
     //延迟消息等级
     public static final int ORDER_PAY_TIMEOUT_DELAY_LEVEL = 13;
+    //积分事务消息分组
+    public static final String INTEGRAL_REFUND_TX_GROUP="integral-refund-tx-group";
+    public static final String INTEGRAL_REFUND_TX_TOPIC="INTEGRAL_REFUND_TX_TOPIC";
+
 }

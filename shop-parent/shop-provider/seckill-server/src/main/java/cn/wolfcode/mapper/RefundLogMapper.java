@@ -12,4 +12,6 @@ public interface RefundLogMapper {
      * @return
      */
     int insert(RefundLog refundLog);
+
+    RefundLog selectByOrderNo(String orderNo);
 }
