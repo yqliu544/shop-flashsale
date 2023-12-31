@@ -18,6 +18,7 @@ import cn.wolfcode.service.ISeckillProductService;
 import cn.wolfcode.util.AssertUtils;
 import cn.wolfcode.util.IdGenerateUtil;
 import cn.wolfcode.web.msg.SeckillCodeMsg;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
 import org.apache.rocketmq.client.producer.TransactionSendResult;
@@ -196,7 +197,7 @@ public class OrderInfoSeviceImpl implements IOrderInfoService {
         refundLog.setOutTradeNo(orderInfo.getOrderNo());
         refundLogMapper.insert(refundLog);
     }
-
+    @GlobalTransactional
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void integralPay(String orderNo, Long phone) {

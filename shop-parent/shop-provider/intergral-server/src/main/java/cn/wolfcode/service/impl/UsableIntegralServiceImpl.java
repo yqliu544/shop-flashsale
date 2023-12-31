@@ -32,7 +32,7 @@ public class UsableIntegralServiceImpl implements IUsableIntegralService {
     private AccountLogMapper accountLogMapper;
     @Autowired
     private IdGenerateUtil idGenerateUtil;
-
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String doPay(OperateIntergralVo vo) {
         int row = usableIntegralMapper.decrIntegral(vo.getUserId(), vo.getValue());
