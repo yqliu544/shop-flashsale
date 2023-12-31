@@ -3,9 +3,9 @@
 <mapper namespace="cn.wolfcode.mapper.AccountTransactionMapper" >
   <insert id="insert">
     insert into t_account_transaction
-    (tx_id,action_id,gmt_created,gmt_modified,amount,user_id,type,state)
+    (tx_id,action_id,gmt_created,gmt_modified,amount,user_id,type,state,trade_no)
     values
-    (#{txId},#{actionId},#{gmtCreated},#{gmtModified},#{amount},#{userId},#{type},#{state})
+    (#{txId},#{actionId},#{gmtCreated},#{gmtModified},#{amount},#{userId},#{type},#{state},#{tradeNo})
   </insert>
   <select id="get" resultType="cn.wolfcode.domain.AccountTransaction">
     select * from t_account_transaction where tx_id = #{txId} and action_id = #{actionId}

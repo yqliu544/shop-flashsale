@@ -19,7 +19,7 @@ public class IntegralController {
 
     @PostMapping("/prepay")
     public Result<String> prepay(@RequestBody OperateIntergralVo vo){
-        String tradeNo=usableIntegralService.doPay(vo);
+        String tradeNo=usableIntegralService.tryPayment(vo,null);
         return Result.success(tradeNo);
     }
     @PostMapping("/integral/refund")
